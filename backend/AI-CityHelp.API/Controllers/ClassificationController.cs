@@ -128,7 +128,17 @@ public class ClassificationController : ControllerBase
         catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, "Error in classify endpoint: {Message}", ex.Message);
-            return StatusCode(500, new { error = ex.Message });
+            
+            // Provide more user-friendly error messages for common issues
+            var errorMessage = ex.Message;
+            if (ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) || 
+                ex.Message.Contains("insufficient_quota", StringComparison.OrdinalIgnoreCase))
+            {
+                errorMessage = "OpenAI API quota exceeded. Please check your OpenAI account billing and add credits. " +
+                    "Visit https://platform.openai.com/account/billing for more information.";
+            }
+            
+            return StatusCode(500, new { error = errorMessage });
         }
         catch (Exception ex)
         {

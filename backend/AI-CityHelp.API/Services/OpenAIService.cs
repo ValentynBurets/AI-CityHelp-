@@ -12,12 +12,14 @@ public class OpenAIService : IOpenAIService
 {
     private readonly OpenAI.Managers.OpenAIService _openAIService;
     private readonly ILogger<OpenAIService> _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly string _embeddingModel = "text-embedding-3-small";
     private readonly string _chatModel = "gpt-4o-mini";
 
-    public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger)
+    public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger, ILoggerFactory loggerFactory)
     {
         _logger = logger;
+        _loggerFactory = loggerFactory;
         var apiKey = configuration["OpenAI:ApiKey"] 
             ?? throw new InvalidOperationException("OpenAI:ApiKey is not configured. Please set the OpenAI__ApiKey environment variable.");
         
@@ -39,13 +41,14 @@ public class OpenAIService : IOpenAIService
     {
         try
         {
+            // Try OpenAI first
             if (string.IsNullOrWhiteSpace(text))
             {
                 _logger.LogWarning("Attempted to generate embedding for empty text");
                 throw new ArgumentException("Text cannot be empty", nameof(text));
             }
 
-            _logger.LogInformation("Generating embedding for text (length: {Length})", text.Length);
+            _logger.LogInformation("Attempting to generate embedding using OpenAI for text (length: {Length})", text.Length);
             
             var embeddingResult = await _openAIService.Embeddings.CreateEmbedding(new EmbeddingCreateRequest
             {
@@ -56,28 +59,30 @@ public class OpenAIService : IOpenAIService
             if (embeddingResult.Successful && embeddingResult.Data != null && embeddingResult.Data.Any())
             {
                 var embedding = embeddingResult.Data[0].Embedding.Select(e => (float)e).ToArray();
-                _logger.LogInformation("Successfully generated embedding with {Count} dimensions", embedding.Length);
+                _logger.LogInformation("Successfully generated embedding using OpenAI with {Count} dimensions", embedding.Length);
                 return embedding;
             }
             
-            // Log detailed error information
+            // If OpenAI request was not successful, fall through to local embedding
             var errorMessage = embeddingResult.Error?.Message ?? "Unknown error";
             var errorCode = embeddingResult.Error?.Code ?? "Unknown";
-            _logger.LogError("Failed to generate embedding. Error: {Error}, Code: {Code}, Successful: {Successful}, HasData: {HasData}",
-                errorMessage, errorCode, embeddingResult.Successful, embeddingResult.Data != null && embeddingResult.Data.Any());
-            
-            throw new InvalidOperationException($"Failed to generate embedding: {errorMessage} (Code: {errorCode})");
-        }
-        catch (InvalidOperationException)
-        {
-            throw; // Re-throw our custom exceptions
+            _logger.LogWarning("OpenAI embedding generation failed. Error: {Error}, Code: {Code}. Falling back to local embedding service.",
+                errorMessage, errorCode);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating embedding for text (length: {Length}): {Message}", 
-                text?.Length ?? 0, ex.Message);
-            throw new InvalidOperationException($"Failed to generate embedding: {ex.Message}", ex);
+            // Catch any exceptions (network errors, quota errors, etc.) and fall back to local
+            _logger.LogWarning(ex, "OpenAI embedding generation failed with exception: {Message}. Falling back to local embedding service.", ex.Message);
         }
+
+        // Fallback to local embedding service
+        _logger.LogInformation("Using local embedding service as fallback");
+        return await Task.Run(() =>
+        {
+            var localLogger = _loggerFactory.CreateLogger<LocalEmbeddingService>();
+            var localEmbeddingService = new LocalEmbeddingService(localLogger);
+            return localEmbeddingService.GenerateEmbedding(text);
+        });
     }
 
     public async Task<string> ClassifyRequestAsync(string requestText, List<Category> contextCategories)

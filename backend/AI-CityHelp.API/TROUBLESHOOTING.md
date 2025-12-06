@@ -63,6 +63,24 @@ After restarting the API, check the console output or log files in `logs/` direc
 **Issue: "Rate limit exceeded"**
 - **Solution:** Wait a few minutes and try again, or upgrade your OpenAI plan
 
+**Issue: "You exceeded your current quota" or "insufficient_quota" (Code: insufficient_quota)**
+- **Cause:** Your OpenAI account has run out of credits or reached its usage limit
+- **Solution:**
+  1. **Add credits to your OpenAI account:**
+     - Visit https://platform.openai.com/account/billing
+     - Click "Add payment method" or "Add credits"
+     - Add sufficient credits to cover your usage
+  2. **Check your usage:**
+     - Go to https://platform.openai.com/usage
+     - Review your current usage and limits
+  3. **Upgrade your plan (if applicable):**
+     - Some plans have higher usage limits
+     - Check if upgrading would help: https://platform.openai.com/account/billing
+  4. **Wait for quota reset (if on a usage-based plan):**
+     - Some plans reset quotas monthly
+     - Check your billing cycle
+- **Prevention:** Monitor your usage regularly and set up billing alerts in your OpenAI account
+
 **Issue: "Network error" or "Connection timeout"**
 - **Solution:** Check your internet connection and firewall settings
 
