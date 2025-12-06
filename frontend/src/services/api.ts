@@ -58,22 +58,18 @@ api.interceptors.response.use(
 export const classificationApi = {
   classify: async (request: ClassificationRequest | FormData): Promise<ClassificationResponse> => {
     const startTime = Date.now()
-    try {
-      let response
-      if (request instanceof FormData) {
-        // Send as multipart/form-data for file upload
-        // Axios will automatically set Content-Type with boundary
-        response = await api.post<ClassificationResponse>('/classify', request)
-      } else {
-        // Send as JSON for URL-based requests
-        response = await api.post<ClassificationResponse>('/classify', request)
-      }
-      const duration = Date.now() - startTime
-      console.log(`[Classification] Duration: ${duration}ms`)
-      return response.data
-    } catch (error) {
-      throw error
+    let response
+    if (request instanceof FormData) {
+      // Send as multipart/form-data for file upload
+      // Axios will automatically set Content-Type with boundary
+      response = await api.post<ClassificationResponse>('/classify', request)
+    } else {
+      // Send as JSON for URL-based requests
+      response = await api.post<ClassificationResponse>('/classify', request)
     }
+    const duration = Date.now() - startTime
+    console.log(`[Classification] Duration: ${duration}ms`)
+    return response.data
   },
 }
 
