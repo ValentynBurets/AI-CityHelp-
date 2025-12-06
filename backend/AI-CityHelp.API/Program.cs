@@ -1,8 +1,6 @@
 using AI_CityHelp_API.Services;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
-
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
 if (File.Exists(envPath))
 {
@@ -18,6 +16,10 @@ if (File.Exists(envPath))
     }
 }
 
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables();
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("logs/cityhelp-.txt", rollingInterval: RollingInterval.Day)
@@ -25,9 +27,21 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "AI CityHelp API",
+        Version = "v1"
+    });
+});
 
 builder.Services.AddCors(options =>
 {

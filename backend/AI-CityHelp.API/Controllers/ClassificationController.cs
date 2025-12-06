@@ -19,6 +19,9 @@ public class ClassificationController : ControllerBase
 
     [HttpPost("classify")]
     [Consumes("application/json", "multipart/form-data")]
+    [ProducesResponseType(typeof(ClassificationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ClassificationResponse>> Classify()
     {
         try
@@ -29,7 +32,7 @@ public class ClassificationController : ControllerBase
             string? contactPhone = null;
             string? contactEmail = null;
             string? priority = null;
-            List<IFormFile> imageFiles = new List<IFormFile>();
+            List<IFormFile> imageFileList = new List<IFormFile>();
 
             if (Request.ContentType?.Contains("multipart/form-data") == true)
             {
@@ -43,7 +46,7 @@ public class ClassificationController : ControllerBase
                 priority = form["priority"].FirstOrDefault();
                 
                 var allFiles = form.Files.ToList();
-                imageFiles = allFiles
+                imageFileList = allFiles
                     .Where(f => f.Name.StartsWith("imageFile"))
                     .OrderBy(f => f.Name)
                     .ToList();
@@ -68,11 +71,11 @@ public class ClassificationController : ControllerBase
             }
 
             string? finalImageUrl = imageUrl;
-            if (imageFiles.Count > 0)
+            if (imageFileList.Count > 0)
             {
-                _logger.LogInformation("Processing {Count} image file(s)", imageFiles.Count);
+                _logger.LogInformation("Processing {Count} image file(s)", imageFileList.Count);
                 
-                var firstImage = imageFiles[0];
+                var firstImage = imageFileList[0];
                 if (firstImage.Length > 0)
                 {
                     var fileName = Path.GetFileName(firstImage.FileName);
@@ -96,9 +99,9 @@ public class ClassificationController : ControllerBase
                     catch { }
                 }
                 
-                if (imageFiles.Count > 1)
+                if (imageFileList.Count > 1)
                 {
-                    _logger.LogInformation("Additional {Count} image file(s) uploaded but using first image for classification", imageFiles.Count - 1);
+                    _logger.LogInformation("Additional {Count} image file(s) uploaded but using first image for classification", imageFileList.Count - 1);
                 }
             }
 
@@ -147,6 +150,7 @@ public class ClassificationController : ControllerBase
             
             return System.Text.Json.JsonSerializer.Deserialize<T>(body, new System.Text.Json.JsonSerializerOptions
             {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
                 PropertyNameCaseInsensitive = true
             });
         }
