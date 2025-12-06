@@ -19,7 +19,15 @@ public class OpenAIService : IOpenAIService
     {
         _logger = logger;
         var apiKey = configuration["OpenAI:ApiKey"] 
-            ?? throw new InvalidOperationException("OpenAI:ApiKey is not configured");
+            ?? throw new InvalidOperationException("OpenAI:ApiKey is not configured. Please set the OpenAI__ApiKey environment variable.");
+        
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "YOUR_OPENAI_API_KEY_HERE")
+        {
+            throw new InvalidOperationException("OpenAI:ApiKey is not properly configured. Please set a valid OpenAI__ApiKey environment variable.");
+        }
+        
+        _logger.LogInformation("Initializing OpenAI service with embedding model: {EmbeddingModel}, chat model: {ChatModel}", 
+            _embeddingModel, _chatModel);
         
         _openAIService = new OpenAI.Managers.OpenAIService(new OpenAiOptions
         {

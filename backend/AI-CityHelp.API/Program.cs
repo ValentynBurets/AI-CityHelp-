@@ -3,6 +3,22 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load .env file if it exists
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
+{
+    foreach (var line in File.ReadAllLines(envPath))
+    {
+        var parts = line.Split('=', 2);
+        if (parts.Length == 2 && !string.IsNullOrWhiteSpace(parts[0]) && !parts[0].StartsWith("#"))
+        {
+            var key = parts[0].Trim();
+            var value = parts[1].Trim();
+            Environment.SetEnvironmentVariable(key, value);
+        }
+    }
+}
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -45,6 +61,17 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowReactApp");
 app.UseAuthorization();
 app.MapControllers();
+
+// Check OpenAI API key configuration
+var apiKey = builder.Configuration["OpenAI:ApiKey"];
+if (string.IsNullOrEmpty(apiKey))
+{
+    Log.Warning("OpenAI:ApiKey is not configured. Please set the OpenAI__ApiKey environment variable.");
+}
+else
+{
+    Log.Information("OpenAI API key is configured (length: {Length})", apiKey.Length);
+}
 
 // Initialize vector store
 var vectorStore = app.Services.GetRequiredService<IVectorStore>();
