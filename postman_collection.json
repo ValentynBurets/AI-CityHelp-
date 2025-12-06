@@ -1,0 +1,82 @@
+{
+  "info": {
+    "name": "AI CityHelp API",
+    "description": "API collection for AI CityHelp classification PoC",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Classification",
+      "item": [
+        {
+          "name": "Classify Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestText\": \"Пошкоджений люк біля будинку\",\n  \"imageUrl\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/classify",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "classify"]
+            },
+            "description": "Classify a citizen request into a municipal service category"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Knowledge Base",
+      "item": [
+        {
+          "name": "Load Knowledge Base",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/kb/load",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kb", "load"]
+            },
+            "description": "Load knowledge base from JSON file and generate embeddings"
+          }
+        },
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/kb/all",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kb", "all"]
+            },
+            "description": "Get all categories from the knowledge base"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}
+
+
