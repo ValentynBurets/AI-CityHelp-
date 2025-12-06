@@ -57,6 +57,7 @@ builder.Services.AddSingleton<IVectorStore, VectorStoreService>();
 builder.Services.AddSingleton<IRagEngine, RagEngineService>();
 builder.Services.AddSingleton<IKnowledgeBaseService, KnowledgeBaseService>();
 builder.Services.AddSingleton<IOpenAIService, OpenAIService>();
+builder.Services.AddSingleton<KnowledgeBaseInitializationService>();
 
 var app = builder.Build();
 
@@ -82,6 +83,9 @@ else
 
 var vectorStore = app.Services.GetRequiredService<IVectorStore>();
 await vectorStore.InitializeAsync();
+
+var kbInitializationService = app.Services.GetRequiredService<KnowledgeBaseInitializationService>();
+await kbInitializationService.InitializeAsync(apiKey);
 
 try
 {
