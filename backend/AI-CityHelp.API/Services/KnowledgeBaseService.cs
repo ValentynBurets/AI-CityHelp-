@@ -17,7 +17,6 @@ public class KnowledgeBaseService : IKnowledgeBaseService
         
         try
         {
-            // Resolve the path relative to the content root
             if (Path.IsPathRooted(configuredPath))
             {
                 _kbPath = configuredPath;
@@ -31,13 +30,11 @@ public class KnowledgeBaseService : IKnowledgeBaseService
                 }
                 else
                 {
-                    // Normalize path separators for cross-platform compatibility
                     var normalizedPath = configuredPath.Replace('/', Path.DirectorySeparatorChar);
                     _kbPath = Path.Combine(env.ContentRootPath, normalizedPath);
                 }
             }
             
-            // Normalize the final path
             _kbPath = Path.GetFullPath(_kbPath);
             
             _logger.LogInformation("Knowledge base path: {Path}", _kbPath);
@@ -77,12 +74,10 @@ public class KnowledgeBaseService : IKnowledgeBaseService
 
     public List<Category> GetCategories()
     {
-        // If categories haven't been loaded yet, load them synchronously
         if (_categories == null)
         {
             try
             {
-                // Use synchronous version for GetCategories since it's called from a sync method
                 if (string.IsNullOrWhiteSpace(_kbPath))
                 {
                     _logger.LogWarning("Knowledge base path is not configured");

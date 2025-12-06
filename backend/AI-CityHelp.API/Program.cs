@@ -3,7 +3,6 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load .env file if it exists
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
 if (File.Exists(envPath))
 {
@@ -19,7 +18,6 @@ if (File.Exists(envPath))
     }
 }
 
-// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("logs/cityhelp-.txt", rollingInterval: RollingInterval.Day)
@@ -27,12 +25,10 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
@@ -43,7 +39,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Register services
 builder.Services.AddSingleton<IVectorStore, VectorStoreService>();
 builder.Services.AddSingleton<IRagEngine, RagEngineService>();
 builder.Services.AddSingleton<IKnowledgeBaseService, KnowledgeBaseService>();
@@ -51,7 +46,6 @@ builder.Services.AddSingleton<IOpenAIService, OpenAIService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -62,7 +56,6 @@ app.UseCors("AllowReactApp");
 app.UseAuthorization();
 app.MapControllers();
 
-// Check OpenAI API key configuration
 var apiKey = builder.Configuration["OpenAI:ApiKey"];
 if (string.IsNullOrEmpty(apiKey))
 {
@@ -73,7 +66,6 @@ else
     Log.Information("OpenAI API key is configured (length: {Length})", apiKey.Length);
 }
 
-// Initialize vector store
 var vectorStore = app.Services.GetRequiredService<IVectorStore>();
 await vectorStore.InitializeAsync();
 

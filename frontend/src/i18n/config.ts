@@ -3,7 +3,6 @@ import { initReactI18next } from 'react-i18next'
 import enTranslations from './locales/en.json'
 import ukTranslations from './locales/uk.json'
 
-// Get saved language from localStorage or default to English
 const savedLanguage = localStorage.getItem('language') || 'en'
 
 i18n

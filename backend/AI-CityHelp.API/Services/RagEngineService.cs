@@ -31,11 +31,9 @@ public class RagEngineService : IRagEngine
         {
             _logger.LogInformation("Classifying request: {RequestText}", requestText);
 
-            // Step 1: Generate embedding for the request
             var requestEmbedding = await _openAIService.GenerateEmbeddingAsync(requestText);
             _logger.LogInformation("Generated embedding in {Ms}ms", stopwatch.ElapsedMilliseconds);
 
-            // Step 2: Search for similar categories (Top-K = 3)
             var similarCategories = await _vectorStore.SearchSimilarAsync(requestEmbedding, topK: 3);
             _logger.LogInformation("Found {Count} similar categories in {Ms}ms", 
                 similarCategories.Count, stopwatch.ElapsedMilliseconds);
@@ -45,7 +43,6 @@ public class RagEngineService : IRagEngine
                 throw new InvalidOperationException("No categories found in vector store. Please load the knowledge base first.");
             }
 
-            // Step 3: Convert embeddings to categories
             var contextCategories = similarCategories.Select(ce => new Category
             {
                 Id = ce.Id,
@@ -53,11 +50,9 @@ public class RagEngineService : IRagEngine
                 Description = ce.Description
             }).ToList();
 
-            // Step 4: Get LLM classification
             var rawResponse = await _openAIService.ClassifyRequestAsync(requestText, contextCategories);
             _logger.LogInformation("LLM response received in {Ms}ms", stopwatch.ElapsedMilliseconds);
 
-            // Step 5: Parse JSON response
             var classificationResult = JsonSerializer.Deserialize<ClassificationResult>(rawResponse, 
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
@@ -66,7 +61,6 @@ public class RagEngineService : IRagEngine
                 throw new InvalidOperationException("Failed to parse LLM response");
             }
 
-            // Step 6: Build response
             var response = new ClassificationResponse
             {
                 Category = classificationResult.Category,

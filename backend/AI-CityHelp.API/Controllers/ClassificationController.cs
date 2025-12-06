@@ -31,14 +31,10 @@ public class ClassificationController : ControllerBase
             string? priority = null;
             List<IFormFile> imageFiles = new List<IFormFile>();
 
-            // Check content type and read accordingly
             if (Request.ContentType?.Contains("multipart/form-data") == true)
             {
-                // Handle form-data (file upload)
                 var form = await Request.ReadFormAsync();
                 
-                // Extract form values correctly - StringValues should be accessed via FirstOrDefault() or checked for Count
-                // Using FirstOrDefault() returns null for empty values, which is what we want
                 requestText = form["requestText"].FirstOrDefault();
                 imageUrl = form["imageUrl"].FirstOrDefault();
                 contactName = form["contactName"].FirstOrDefault();
@@ -46,7 +42,6 @@ public class ClassificationController : ControllerBase
                 contactEmail = form["contactEmail"].FirstOrDefault();
                 priority = form["priority"].FirstOrDefault();
                 
-                // Get all image files (supporting multiple uploads)
                 var allFiles = form.Files.ToList();
                 imageFiles = allFiles
                     .Where(f => f.Name.StartsWith("imageFile"))
@@ -55,7 +50,6 @@ public class ClassificationController : ControllerBase
             }
             else
             {
-                // Handle JSON
                 var jsonRequest = await ReadJsonBodyAsync<ClassificationRequest>();
                 if (jsonRequest != null)
                 {
@@ -73,18 +67,14 @@ public class ClassificationController : ControllerBase
                 return BadRequest(new { error = "RequestText is required" });
             }
 
-            // Handle file uploads (multiple images)
             string? finalImageUrl = imageUrl;
             if (imageFiles.Count > 0)
             {
                 _logger.LogInformation("Processing {Count} image file(s)", imageFiles.Count);
                 
-                // For now, use the first image (RAG engine accepts single image)
-                // In the future, we could combine multiple images or process them separately
                 var firstImage = imageFiles[0];
                 if (firstImage.Length > 0)
                 {
-                    // Save uploaded file temporarily and convert to base64 data URL
                     var fileName = Path.GetFileName(firstImage.FileName);
                     var tempPath = Path.Combine(Path.GetTempPath(), $"cityhelp_{Guid.NewGuid()}_{fileName}");
                     
@@ -95,12 +85,10 @@ public class ClassificationController : ControllerBase
                     
                     _logger.LogInformation("Image file uploaded: {FileName}, Size: {Size} bytes", fileName, firstImage.Length);
                     
-                    // Convert to base64 data URL for processing
                     var imageBytes = await System.IO.File.ReadAllBytesAsync(tempPath);
                     var base64Image = Convert.ToBase64String(imageBytes);
                     finalImageUrl = $"data:{firstImage.ContentType};base64,{base64Image}";
                     
-                    // Clean up temp file
                     try
                     {
                         System.IO.File.Delete(tempPath);
@@ -108,14 +96,12 @@ public class ClassificationController : ControllerBase
                     catch { }
                 }
                 
-                // Log all uploaded files
                 if (imageFiles.Count > 1)
                 {
                     _logger.LogInformation("Additional {Count} image file(s) uploaded but using first image for classification", imageFiles.Count - 1);
                 }
             }
 
-            // Log contact information and priority if provided
             if (!string.IsNullOrWhiteSpace(contactName) || !string.IsNullOrWhiteSpace(contactPhone) || !string.IsNullOrWhiteSpace(contactEmail))
             {
                 _logger.LogInformation("Contact information provided - Name: {Name}, Phone: {Phone}, Email: {Email}, Priority: {Priority}",
@@ -129,7 +115,6 @@ public class ClassificationController : ControllerBase
         {
             _logger.LogError(ex, "Error in classify endpoint: {Message}", ex.Message);
             
-            // Provide more user-friendly error messages for common issues
             var errorMessage = ex.Message;
             if (ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) || 
                 ex.Message.Contains("insufficient_quota", StringComparison.OrdinalIgnoreCase))

@@ -103,7 +103,6 @@ export default function ChatAgent({ onFormDataExtracted, onClose }: ChatAgentPro
 
       setMessages((prev) => [...prev, assistantMessage])
 
-      // Extract form data if provided
       if (data.extractedData) {
         onFormDataExtracted(data.extractedData)
       }

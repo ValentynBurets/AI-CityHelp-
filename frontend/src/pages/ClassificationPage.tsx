@@ -91,14 +91,11 @@ export default function ClassificationPage() {
     mutationFn: (data: ClassificationRequest | FormData) => classificationApi.classify(data),
   })
 
-  // Track form interaction time and suggest AI assistant after 5 minutes
   useEffect(() => {
     if (showChat) return
 
-    // Start tracking when user first interacts with form fields
     const handleFormInteraction = (e: Event) => {
       const target = e.target as HTMLElement
-      // Only track interactions with form elements (inputs, textareas, buttons within form)
       const isFormElement = 
         target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
@@ -110,7 +107,6 @@ export default function ClassificationPage() {
       }
     }
 
-    // Listen for form interactions
     const events = ['input', 'change', 'focus', 'click']
     events.forEach((event) => {
       document.addEventListener(event, handleFormInteraction, true)
@@ -123,7 +119,6 @@ export default function ClassificationPage() {
     }
   }, [formStartTime, showChat])
 
-  // Check if 5 minutes have passed
   useEffect(() => {
     if (formStartTime === null || showChat || showAISuggestion) {
       return
@@ -138,7 +133,6 @@ export default function ClassificationPage() {
       }
     }
 
-    // Check every 30 seconds
     suggestionTimerRef.current = setInterval(checkTime, 30000)
 
     return () => {
@@ -148,7 +142,6 @@ export default function ClassificationPage() {
     }
   }, [formStartTime, showChat, showAISuggestion])
 
-  // Reset timer when form is submitted or chat is opened
   useEffect(() => {
     if (mutation.isSuccess || showChat) {
       setFormStartTime(null)
@@ -192,7 +185,6 @@ export default function ClassificationPage() {
       setSelectedFiles(newFiles)
       setImageUrl(null)
       
-      // Generate previews for new files
       validFiles.forEach((file) => {
         const reader = new FileReader()
         reader.onloadend = () => {
@@ -202,7 +194,6 @@ export default function ClassificationPage() {
       })
     }
 
-    // Reset input to allow selecting the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }

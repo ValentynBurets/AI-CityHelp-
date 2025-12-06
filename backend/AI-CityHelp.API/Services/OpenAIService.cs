@@ -41,7 +41,6 @@ public class OpenAIService : IOpenAIService
     {
         try
         {
-            // Try OpenAI first
             if (string.IsNullOrWhiteSpace(text))
             {
                 _logger.LogWarning("Attempted to generate embedding for empty text");
@@ -63,7 +62,6 @@ public class OpenAIService : IOpenAIService
                 return embedding;
             }
             
-            // If OpenAI request was not successful, fall through to local embedding
             var errorMessage = embeddingResult.Error?.Message ?? "Unknown error";
             var errorCode = embeddingResult.Error?.Code ?? "Unknown";
             _logger.LogWarning("OpenAI embedding generation failed. Error: {Error}, Code: {Code}. Falling back to local embedding service.",
@@ -71,11 +69,9 @@ public class OpenAIService : IOpenAIService
         }
         catch (Exception ex)
         {
-            // Catch any exceptions (network errors, quota errors, etc.) and fall back to local
             _logger.LogWarning(ex, "OpenAI embedding generation failed with exception: {Message}. Falling back to local embedding service.", ex.Message);
         }
 
-        // Fallback to local embedding service
         _logger.LogInformation("Using local embedding service as fallback");
         return await Task.Run(() =>
         {
@@ -198,7 +194,6 @@ Analyze this conversation and provide a helpful response. Extract any available 
             {
                 var result = completionResult.Choices.First().Message.Content;
                 
-                // Try to parse JSON response
                 try
                 {
                     var parsed = JsonSerializer.Deserialize<ChatResponse>(result, new JsonSerializerOptions
@@ -213,7 +208,6 @@ Analyze this conversation and provide a helpful response. Extract any available 
                 }
                 catch
                 {
-                    // If JSON parsing fails, return as plain response
                     return new ChatResponse
                     {
                         Response = result

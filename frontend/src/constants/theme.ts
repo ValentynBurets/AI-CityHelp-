@@ -1,44 +1,26 @@
-/**
- * Theme constants for the AI CityHelp application
- * Centralized location for all colors, sizes, transitions, and styling constants
- */
-
-// ============================================================================
-// Color Palette
-// ============================================================================
-
 export const COLORS = {
-  // Primary colors
   primary: {
     main: '#6366f1',
     light: '#818cf8',
     dark: '#4f46e5',
     contrastText: '#ffffff',
   },
-  // Secondary colors
   secondary: {
     main: '#ec4899',
     light: '#f472b6',
     dark: '#db2777',
   },
-  // Background colors
   background: {
     default: '#f8fafc',
     paper: '#ffffff',
   },
-  // Text colors
   text: {
     primary: '#1e293b',
     secondary: '#64748b',
   },
 } as const
 
-// ============================================================================
-// Pastel Colors for Accordion Sections
-// ============================================================================
-
 export const PASTEL_COLORS = {
-  // Blue pastel - Request Details
   blue: {
     background: 'rgba(147, 197, 253, 0.3)',
     backgroundHover: 'rgba(147, 197, 253, 0.4)',
@@ -50,7 +32,6 @@ export const PASTEL_COLORS = {
       icon: '#3b82f6',
     },
   },
-  // Pink pastel - Contact Information
   pink: {
     background: 'rgba(251, 207, 232, 0.3)',
     backgroundHover: 'rgba(251, 207, 232, 0.4)',
@@ -62,7 +43,6 @@ export const PASTEL_COLORS = {
       icon: '#ec4899',
     },
   },
-  // Yellow pastel - Priority Level
   yellow: {
     background: 'rgba(254, 240, 138, 0.3)',
     backgroundHover: 'rgba(254, 240, 138, 0.4)',
@@ -74,7 +54,6 @@ export const PASTEL_COLORS = {
       icon: '#f59e0b',
     },
   },
-  // Green pastel - Image Upload
   green: {
     background: 'rgba(187, 247, 208, 0.3)',
     backgroundHover: 'rgba(187, 247, 208, 0.4)',
@@ -88,10 +67,6 @@ export const PASTEL_COLORS = {
   },
 } as const
 
-// ============================================================================
-// Gradients
-// ============================================================================
-
 export const GRADIENTS = {
   primary: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
   primaryHover: 'linear-gradient(135deg, #4f46e5 0%, #db2777 100%)',
@@ -100,26 +75,19 @@ export const GRADIENTS = {
   resultCard: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%)',
 } as const
 
-// ============================================================================
-// Sizes
-// ============================================================================
-
 export const SIZES = {
-  // Icon sizes
   icon: {
     small: 20,
     medium: 28,
     large: 32,
     xlarge: 36,
   },
-  // Container sizes
   container: {
     iconBox: 48,
     expandIcon: 32,
     avatar: 32,
     maxWidth: 1200,
   },
-  // Spacing
   spacing: {
     accordionPadding: 3,
     cardPadding: { xs: 2, sm: 3, md: 4 },
@@ -128,18 +96,12 @@ export const SIZES = {
   },
 } as const
 
-// ============================================================================
-// Transitions & Animations
-// ============================================================================
-
 export const TRANSITIONS = {
-  // Timing functions
   easing: {
     standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
     smooth: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     exit: 'cubic-bezier(0.55, 0.06, 0.68, 0.19)',
   },
-  // Durations
   duration: {
     fast: 200,
     normal: 300,
@@ -148,7 +110,6 @@ export const TRANSITIONS = {
     slower: 600,
     slowest: 800,
   },
-  // Combined transition strings
   standard: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   smooth: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
   background: 'background-color 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -161,10 +122,6 @@ export const TRANSITIONS = {
     details: 'padding 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
   },
 } as const
-
-// ============================================================================
-// Shadows
-// ============================================================================
 
 export const SHADOWS = {
   small: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
@@ -182,10 +139,6 @@ export const SHADOWS = {
   cardHover: '0 8px 24px rgba(0, 0, 0, 0.2)',
 } as const
 
-// ============================================================================
-// Border Radius
-// ============================================================================
-
 export const BORDER_RADIUS = {
   small: 2,
   medium: 8,
@@ -194,20 +147,12 @@ export const BORDER_RADIUS = {
   round: '50%',
 } as const
 
-// ============================================================================
-// Z-Index
-// ============================================================================
-
 export const Z_INDEX = {
   fab: 1000,
   drawer: 1200,
   modal: 1300,
   tooltip: 1500,
 } as const
-
-// ============================================================================
-// Typography
-// ============================================================================
 
 export const TYPOGRAPHY = {
   fontFamily: [
@@ -231,29 +176,15 @@ export const TYPOGRAPHY = {
   },
 } as const
 
-// ============================================================================
-// Animation Delays
-// ============================================================================
-
 export const ANIMATION_DELAYS = {
   fadeIn: 150,
   stagger: 100,
 } as const
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Creates a pastel color configuration for accordion sections
- */
 export const getPastelColorConfig = (color: keyof typeof PASTEL_COLORS) => {
   return PASTEL_COLORS[color]
 }
 
-/**
- * Creates a transition string with custom duration
- */
 export const createTransition = (
   properties: string | string[],
   duration: number = TRANSITIONS.duration.normal,

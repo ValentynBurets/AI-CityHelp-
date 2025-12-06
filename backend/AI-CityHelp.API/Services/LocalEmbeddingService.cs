@@ -28,26 +28,21 @@ public class LocalEmbeddingService
         var tokens = Tokenize(text);
         var embedding = new float[EmbeddingDimension];
 
-        // Use multiple hashing techniques to create a rich embedding
         foreach (var token in tokens)
         {
             var normalizedToken = token.ToLowerInvariant();
 
-            // Feature hashing: map tokens to embedding dimensions
             var hash1 = GetHash(normalizedToken) % EmbeddingDimension;
             var hash2 = GetHash(normalizedToken + "_2") % EmbeddingDimension;
             var hash3 = GetHash(normalizedToken + "_3") % EmbeddingDimension;
 
-            // Use TF-IDF-like weighting
             var weight = CalculateTokenWeight(normalizedToken, tokens);
 
-            // Add weighted values to multiple positions (for better distribution)
             embedding[Math.Abs(hash1)] += weight;
             embedding[Math.Abs(hash2)] += weight * 0.7f;
             embedding[Math.Abs(hash3)] += weight * 0.5f;
         }
 
-        // Normalize the embedding vector
         NormalizeVector(embedding);
 
         _logger.LogInformation("Successfully generated local embedding with {Count} dimensions", embedding.Length);
@@ -56,11 +51,9 @@ public class LocalEmbeddingService
 
     private List<string> Tokenize(string text)
     {
-        // Remove special characters and split into words
         var cleaned = Regex.Replace(text, @"[^\w\s]", " ", RegexOptions.Compiled);
         var words = cleaned.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         
-        // Filter out very short words and common stop words
         var stopWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by",
@@ -75,7 +68,6 @@ public class LocalEmbeddingService
 
     private int GetHash(string input)
     {
-        // Use FNV-1a hash algorithm for better distribution
         const uint FNV_OFFSET_BASIS = 2166136261u;
         const uint FNV_PRIME = 16777619u;
 
@@ -91,10 +83,8 @@ public class LocalEmbeddingService
 
     private float CalculateTokenWeight(string token, List<string> allTokens)
     {
-        // Simple TF (Term Frequency) calculation
         var termFrequency = allTokens.Count(t => t.Equals(token, StringComparison.OrdinalIgnoreCase)) / (float)allTokens.Count;
         
-        // Add length-based weighting (longer words might be more meaningful)
         var lengthWeight = Math.Min(token.Length / 10.0f, 1.0f);
         
         return termFrequency * (1.0f + lengthWeight * 0.5f);
@@ -102,7 +92,6 @@ public class LocalEmbeddingService
 
     private void NormalizeVector(float[] vector)
     {
-        // Calculate L2 norm
         float sumOfSquares = 0;
         for (int i = 0; i < vector.Length; i++)
         {

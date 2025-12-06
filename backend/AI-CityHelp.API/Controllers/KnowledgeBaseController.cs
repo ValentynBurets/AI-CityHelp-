@@ -32,7 +32,6 @@ public class KnowledgeBaseController : ControllerBase
         {
             _logger.LogInformation("Loading knowledge base");
 
-            // Load categories from file
             var categories = await _kbService.LoadCategoriesAsync();
 
             if (categories.Count == 0)
@@ -40,7 +39,6 @@ public class KnowledgeBaseController : ControllerBase
                 return BadRequest(new { error = "No categories found in knowledge base file" });
             }
 
-            // Generate embeddings for each category
             var embeddings = new List<CategoryEmbedding>();
             foreach (var category in categories)
             {
@@ -56,7 +54,6 @@ public class KnowledgeBaseController : ControllerBase
                 });
             }
 
-            // Store embeddings in vector store
             await _vectorStore.StoreEmbeddingsAsync(embeddings);
 
             _logger.LogInformation("Knowledge base loaded successfully. {Count} items", categories.Count);
@@ -89,7 +86,6 @@ public class KnowledgeBaseController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting all categories");
-            // Return empty list instead of 500 error to prevent frontend crashes
             return Ok(new List<Category>());
         }
     }
