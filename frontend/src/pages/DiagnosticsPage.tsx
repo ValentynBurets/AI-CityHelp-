@@ -43,6 +43,121 @@ export default function DiagnosticsPage() {
   const [logs, setLogs] = useState<DiagnosticLog[]>([])
 
   useEffect(() => {
+    const mockLogs: DiagnosticLog[] = [
+      {
+        timestamp: new Date(Date.now() - 30000).toISOString(),
+        endpoint: '/classify',
+        method: 'POST',
+        request: {
+          requestText: 'Broken streetlight on Main Street',
+          contactPhone: '+380959171229',
+          priority: 'important',
+        },
+        response: {
+          category: 'Infrastructure',
+          confidence: 0.95,
+          suggestedActions: ['Report to city maintenance', 'Check power supply'],
+        },
+        duration: 1250,
+      },
+      {
+        timestamp: new Date(Date.now() - 120000).toISOString(),
+        endpoint: '/kb/all',
+        method: 'GET',
+        request: null,
+        response: [
+          { id: '1', name: 'Infrastructure', description: 'Roads, lights, utilities' },
+          { id: '2', name: 'Environment', description: 'Waste, pollution, parks' },
+        ],
+        duration: 45,
+      },
+      {
+        timestamp: new Date(Date.now() - 180000).toISOString(),
+        endpoint: '/classify',
+        method: 'POST',
+        request: {
+          requestText: 'Pothole on Oak Avenue',
+          contactEmail: 'user@example.com',
+          priority: 'urgent',
+        },
+        response: {
+          category: 'Road Maintenance',
+          confidence: 0.88,
+          suggestedActions: ['Schedule repair', 'Mark area'],
+        },
+        duration: 980,
+      },
+      {
+        timestamp: new Date(Date.now() - 240000).toISOString(),
+        endpoint: '/classify',
+        method: 'POST',
+        request: {
+          requestText: 'Garbage collection missed',
+          contactPhone: '+380501234567',
+          priority: 'not_important',
+        },
+        response: {
+          category: 'Waste Management',
+          confidence: 0.92,
+          suggestedActions: ['Reschedule pickup', 'Contact waste management'],
+        },
+        duration: 1100,
+      },
+      {
+        timestamp: new Date(Date.now() - 300000).toISOString(),
+        endpoint: '/kb/load',
+        method: 'POST',
+        request: null,
+        response: {
+          status: 'success',
+          itemsLoaded: 15,
+        },
+        duration: 320,
+      },
+      {
+        timestamp: new Date(Date.now() - 360000).toISOString(),
+        endpoint: '/classify',
+        method: 'POST',
+        request: {
+          requestText: 'Noisy construction at night',
+          contactPhone: '+380671234567',
+          priority: 'important',
+        },
+        error: 'Failed to generate embedding',
+        duration: 2500,
+      },
+      {
+        timestamp: new Date(Date.now() - 420000).toISOString(),
+        endpoint: '/kb/all',
+        method: 'GET',
+        request: null,
+        response: [
+          { id: '1', name: 'Infrastructure', description: 'Roads, lights, utilities' },
+          { id: '2', name: 'Environment', description: 'Waste, pollution, parks' },
+          { id: '3', name: 'Safety', description: 'Emergency services, security' },
+        ],
+        duration: 38,
+      },
+      {
+        timestamp: new Date(Date.now() - 480000).toISOString(),
+        endpoint: '/classify',
+        method: 'POST',
+        request: {
+          requestText: 'Water leak in park',
+          contactEmail: 'reporter@city.gov',
+          priority: 'urgent',
+        },
+        response: {
+          category: 'Utilities',
+          confidence: 0.97,
+          suggestedActions: ['Send repair crew', 'Shut off water supply'],
+        },
+        duration: 890,
+      },
+    ]
+
+    setLogs(mockLogs)
+
     const originalLog = console.log
     const originalError = console.error
 
