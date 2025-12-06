@@ -6,6 +6,7 @@ import { ThemeProvider } from '@mui/material/styles'
 import { CssBaseline } from '@mui/material'
 import App from './App.tsx'
 import { theme } from './theme'
+import './i18n/config'
 import './index.css'
 import './styles/animations.css'
 

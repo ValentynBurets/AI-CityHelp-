@@ -1,0 +1,81 @@
+{
+  "app": {
+    "title": "AI CityHelp",
+    "classification": "Класифікація",
+    "knowledgeBase": "База знань",
+    "diagnostics": "Діагностика"
+  },
+  "classification": {
+    "title": "Класифікувати запит громадянина",
+    "subtitle": "Заповніть форму нижче або спілкуйтеся з нашим AI-асистентом для підготовки вашого запиту",
+    "requestDetails": "Деталі запиту",
+    "requestDetailsDesc": "Опишіть проблему або запит детально",
+    "requestTextPlaceholder": "Введіть деталі вашого запиту тут...",
+    "contactInfo": "Контактна інформація",
+    "contactInfoDesc": "Як ми можемо зв'язатися з вами після обробки вашого запиту?",
+    "name": "Ім'я",
+    "namePlaceholder": "Ваше повне ім'я",
+    "phone": "Телефон",
+    "phonePlaceholder": "+380 XX XXX XX XX",
+    "email": "Електронна пошта",
+    "emailPlaceholder": "ваша.email@example.com",
+    "priority": "Рівень пріоритету",
+    "priorityDesc": "Виберіть рівень терміновості вашого запиту",
+    "imageUpload": "Завантаження зображення (необов'язково)",
+    "imageUploadDesc": "Додайте фото, щоб допомогти нам краще зрозуміти проблему",
+    "uploadFromPC": "Завантажити з комп'ютера",
+    "chooseFiles": "Вибрати файли",
+    "useImageUrl": "Використати URL зображення",
+    "imageUrlPlaceholder": "https://example.com/image.jpg",
+    "submit": "Відправити запит",
+    "submitting": "Відправка...",
+    "urgent": "Терміново",
+    "important": "Важливо",
+    "notImportant": "Не важливо",
+    "needAdvice": "Потрібна порада",
+    "cannotHandle": "Не можу впоратися",
+    "added": "Додано",
+    "images": "зображень",
+    "image": "зображення"
+  },
+  "knowledgeBase": {
+    "title": "База знань",
+    "reload": "Перезавантажити базу знань",
+    "reloading": "Перезавантаження...",
+    "categories": "Категорії",
+    "noCategories": "Категорії недоступні",
+    "errorLoading": "Помилка завантаження бази знань",
+    "success": "База знань успішно перезавантажена",
+    "itemsLoaded": "елементів завантажено"
+  },
+  "diagnostics": {
+    "title": "Діагностика API",
+    "noLogs": "Поки немає запитів до API",
+    "endpoint": "Кінцева точка",
+    "method": "Метод",
+    "timestamp": "Часова мітка",
+    "request": "Запит",
+    "response": "Відповідь",
+    "error": "Помилка"
+  },
+  "chat": {
+    "title": "AI-асистент",
+    "placeholder": "Введіть ваше повідомлення тут...",
+    "send": "Відправити",
+    "sending": "Відправка...",
+    "close": "Закрити",
+    "suggestion": {
+      "title": "Потрібна допомога з заповненням форми?",
+      "message": "Ви працюєте над цією формою вже деякий час. Наш AI-асистент може допомогти вам завершити її швидше!",
+      "tryAssistant": "Спробувати AI-асистента"
+    }
+  },
+  "common": {
+    "or": "АБО",
+    "loading": "Завантаження...",
+    "error": "Помилка",
+    "success": "Успіх",
+    "close": "Закрити"
+  }
+}
+

@@ -21,13 +21,16 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import CategoryIcon from '@mui/icons-material/Category'
 import AssessmentIcon from '@mui/icons-material/Assessment'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Logo from './components/Logo'
+import LanguageToggle from './components/LanguageToggle'
 import ClassificationPage from './pages/ClassificationPage'
 import KnowledgeBasePage from './pages/KnowledgeBasePage'
 import DiagnosticsPage from './pages/DiagnosticsPage'
 import { GRADIENTS, SHADOWS, TYPOGRAPHY } from './constants/theme'
 
 function App() {
+  const { t } = useTranslation()
   const location = useLocation()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -40,15 +43,15 @@ function App() {
   }
 
   const navItems = [
-    { label: 'Classification', path: '/', icon: <AutoAwesomeIcon /> },
-    { label: 'Knowledge Base', path: '/kb', icon: <CategoryIcon /> },
-    { label: 'Diagnostics', path: '/diagnostics', icon: <AssessmentIcon /> },
+    { label: t('app.classification'), path: '/', icon: <AutoAwesomeIcon /> },
+    { label: t('app.knowledgeBase'), path: '/kb', icon: <CategoryIcon /> },
+    { label: t('app.diagnostics'), path: '/diagnostics', icon: <AssessmentIcon /> },
   ]
 
   const drawerContent = (
-    <Box sx={{ width: 250, pt: 2 }}>
+      <Box sx={{ width: 250, pt: 2 }}>
       <Typography variant="h6" sx={{ px: 2, mb: 2, fontWeight: TYPOGRAPHY.fontWeight.bold }}>
-        AI CityHelp
+        {t('app.title')}
       </Typography>
       <List>
         {navItems.map((item) => (
@@ -84,6 +87,7 @@ function App() {
         sx={{
           background: GRADIENTS.primary,
           boxShadow: SHADOWS.medium,
+          borderRadius: 0,
         }}
       >
         <Toolbar>
@@ -105,7 +109,7 @@ function App() {
               mr: isMobile ? 0 : 4,
             }}
           >
-            AI CityHelp
+            {t('app.title')}
           </Typography>
           {!isMobile && (
             <Tabs
@@ -133,8 +137,10 @@ function App() {
             sx={{
               display: 'flex',
               alignItems: 'center',
+              gap: 1,
             }}
           >
+            <LanguageToggle />
             <Logo />
           </Box>
         </Toolbar>

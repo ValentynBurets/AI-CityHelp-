@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   TextField,
@@ -20,6 +21,8 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Fab,
+  Snackbar,
+  IconButton,
 } from '@mui/material'
 import {
   ExpandMore as ExpandMoreIcon,
@@ -42,6 +45,7 @@ import {
   Block as BlockIcon,
   CheckCircleOutline as CheckCircleOutlineIcon,
   AddPhotoAlternate as AddPhotoAlternateIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material'
 import { useMutation } from '@tanstack/react-query'
 import { classificationApi } from '../services/api'
@@ -58,63 +62,155 @@ import {
   ANIMATION_DELAYS,
 } from '../constants/theme'
 
-const PRIORITY_OPTIONS = [
-  { value: 'urgent', label: 'Urgent', icon: <WarningIcon />, color: 'error' as const },
-  { value: 'important', label: 'Important', icon: <FlagIcon />, color: 'warning' as const },
-  { value: 'not_important', label: 'Not Important', icon: <CheckCircleOutlineIcon />, color: 'success' as const },
-  { value: 'advice', label: 'Need Advice', icon: <HelpIcon />, color: 'info' as const },
-  { value: 'cannot_handle', label: "Can't Handle", icon: <BlockIcon />, color: 'error' as const },
-]
-
 export default function ClassificationPage() {
+  const { t } = useTranslation()
+  
+  const PRIORITY_OPTIONS = [
+    { value: 'urgent', label: t('classification.urgent'), icon: <WarningIcon />, color: 'error' as const },
+    { value: 'important', label: t('classification.important'), icon: <FlagIcon />, color: 'warning' as const },
+    { value: 'not_important', label: t('classification.notImportant'), icon: <CheckCircleOutlineIcon />, color: 'success' as const },
+    { value: 'advice', label: t('classification.needAdvice'), icon: <HelpIcon />, color: 'info' as const },
+    { value: 'cannot_handle', label: t('classification.cannotHandle'), icon: <BlockIcon />, color: 'error' as const },
+  ]
   const [requestText, setRequestText] = useState('')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [contactName, setContactName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [priority, setPriority] = useState<string | null>(null)
   const [showChat, setShowChat] = useState(false)
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>('request-details')
+  const [showAISuggestion, setShowAISuggestion] = useState(false)
+  const [formStartTime, setFormStartTime] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const suggestionTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const mutation = useMutation({
     mutationFn: (data: ClassificationRequest | FormData) => classificationApi.classify(data),
   })
+
+  // Track form interaction time and suggest AI assistant after 5 minutes
+  useEffect(() => {
+    if (showChat) return
+
+    // Start tracking when user first interacts with form fields
+    const handleFormInteraction = (e: Event) => {
+      const target = e.target as HTMLElement
+      // Only track interactions with form elements (inputs, textareas, buttons within form)
+      const isFormElement = 
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'BUTTON' ||
+        target.closest('input, textarea, button, [role="button"]') !== null
+
+      if (isFormElement && formStartTime === null && !showChat) {
+        setFormStartTime(Date.now())
+      }
+    }
+
+    // Listen for form interactions
+    const events = ['input', 'change', 'focus', 'click']
+    events.forEach((event) => {
+      document.addEventListener(event, handleFormInteraction, true)
+    })
+
+    return () => {
+      events.forEach((event) => {
+        document.removeEventListener(event, handleFormInteraction, true)
+      })
+    }
+  }, [formStartTime, showChat])
+
+  // Check if 5 minutes have passed
+  useEffect(() => {
+    if (formStartTime === null || showChat || showAISuggestion) {
+      return
+    }
+
+    const checkTime = () => {
+      const elapsed = Date.now() - formStartTime
+      const fiveMinutes = 5 * 60 * 1000 // 5 minutes in milliseconds
+
+      if (elapsed >= fiveMinutes && !showChat && !showAISuggestion) {
+        setShowAISuggestion(true)
+      }
+    }
+
+    // Check every 30 seconds
+    suggestionTimerRef.current = setInterval(checkTime, 30000)
+
+    return () => {
+      if (suggestionTimerRef.current) {
+        clearInterval(suggestionTimerRef.current)
+      }
+    }
+  }, [formStartTime, showChat, showAISuggestion])
+
+  // Reset timer when form is submitted or chat is opened
+  useEffect(() => {
+    if (mutation.isSuccess || showChat) {
+      setFormStartTime(null)
+      setShowAISuggestion(false)
+      if (suggestionTimerRef.current) {
+        clearInterval(suggestionTimerRef.current)
+        suggestionTimerRef.current = null
+      }
+    }
+  }, [mutation.isSuccess, showChat])
 
   const handleAccordionChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpandedAccordion(isExpanded ? panel : false)
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
+    const files = Array.from(event.target.files || [])
+    if (files.length === 0) return
+
+    const validFiles: File[] = []
+    const invalidFiles: string[] = []
+
+    files.forEach((file) => {
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file')
+        invalidFiles.push(`${file.name} is not an image file`)
         return
       }
       if (file.size > 10 * 1024 * 1024) {
-        alert('File size must be less than 10MB')
+        invalidFiles.push(`${file.name} is larger than 10MB`)
         return
       }
-      setSelectedFile(file)
+      validFiles.push(file)
+    })
+
+    if (invalidFiles.length > 0) {
+      alert(invalidFiles.join('\n'))
+    }
+
+    if (validFiles.length > 0) {
+      const newFiles = [...selectedFiles, ...validFiles]
+      setSelectedFiles(newFiles)
       setImageUrl(null)
       
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+      // Generate previews for new files
+      validFiles.forEach((file) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreviews((prev) => [...prev, reader.result as string])
+        }
+        reader.readAsDataURL(file)
+      })
     }
-  }
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null)
-    setImagePreview(null)
+    // Reset input to allow selecting the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleFormDataExtracted = (data: {
@@ -146,10 +242,12 @@ export default function ClassificationPage() {
       return
     }
     
-    if (selectedFile) {
+    if (selectedFiles.length > 0) {
       const formData = new FormData()
       formData.append('requestText', requestText.trim())
-      formData.append('imageFile', selectedFile)
+      selectedFiles.forEach((file, index) => {
+        formData.append(`imageFile${index}`, file)
+      })
       if (contactName) formData.append('contactName', contactName.trim())
       if (contactPhone) formData.append('contactPhone', contactPhone.trim())
       if (contactEmail) formData.append('contactEmail', contactEmail.trim())
@@ -181,7 +279,11 @@ export default function ClassificationPage() {
         <Fab
           color="primary"
           aria-label="chat with AI"
-          onClick={() => setShowChat(true)}
+          onClick={() => {
+            setShowChat(true)
+            setShowAISuggestion(false)
+            setFormStartTime(null)
+          }}
           sx={{
             position: 'fixed',
             bottom: SIZES.spacing.fabBottom,
@@ -202,6 +304,66 @@ export default function ClassificationPage() {
         </Fab>
       )}
 
+      {/* AI Assistant Suggestion Snackbar */}
+      <Snackbar
+        open={showAISuggestion}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        autoHideDuration={10000}
+        onClose={() => setShowAISuggestion(false)}
+        sx={{
+          bottom: { xs: 90, sm: 100 },
+          zIndex: Z_INDEX.fab + 1,
+        }}
+      >
+        <Alert
+          severity="info"
+          onClose={() => setShowAISuggestion(false)}
+          action={
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setShowChat(true)
+                  setShowAISuggestion(false)
+                  setFormStartTime(null)
+                }}
+                sx={{ textTransform: 'none' }}
+              >
+                {t('chat.suggestion.tryAssistant')}
+              </Button>
+              <IconButton
+                size="small"
+                aria-label="close"
+                color="inherit"
+                onClick={() => setShowAISuggestion(false)}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          }
+          sx={{
+            width: '100%',
+            maxWidth: { xs: '90%', sm: '500px' },
+            bgcolor: 'background.paper',
+            boxShadow: SHADOWS.large,
+            '& .MuiAlert-icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+              <SmartToyIcon sx={{ verticalAlign: 'middle', mr: 1, fontSize: '1.2rem' }} />
+              {t('chat.suggestion.title')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('chat.suggestion.message')}
+            </Typography>
+          </Box>
+        </Alert>
+      </Snackbar>
+
       <Fade in timeout={TRANSITIONS.duration.slower}>
         <Box sx={{ mb: 4, textAlign: 'center' }}>
           <Typography
@@ -211,10 +373,10 @@ export default function ClassificationPage() {
             sx={{ fontWeight: 700, mb: 1 }}
           >
             <AutoAwesomeIcon sx={{ verticalAlign: 'middle', mr: 1, fontSize: '2rem' }} />
-            Classify Citizen Request
+            {t('classification.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Fill out the form below or chat with our AI assistant to prepare your request
+            {t('classification.subtitle')}
           </Typography>
         </Box>
       </Fade>
@@ -299,15 +461,15 @@ export default function ClassificationPage() {
                   </Box>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      Request Details
+                      {t('classification.requestDetails')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Describe the issue or problem you're experiencing
+                      {t('classification.requestDetailsDesc')}
                     </Typography>
                   </Box>
                   {requestText.trim() && (
                     <Chip
-                      label="Filled"
+                      label={t('common.success')}
                       color="success"
                       size="small"
                       icon={<CheckCircleIcon />}
@@ -337,8 +499,8 @@ export default function ClassificationPage() {
                       fullWidth
                       multiline
                       rows={6}
-                      label="Request Text"
-                      placeholder="Enter the citizen's request (e.g., 'Пошкоджений люк біля будинку')"
+                      label={t('classification.requestDetails')}
+                      placeholder={t('classification.requestTextPlaceholder')}
                       value={requestText}
                       onChange={(e) => setRequestText(e.target.value)}
                       variant="outlined"
@@ -426,15 +588,15 @@ export default function ClassificationPage() {
                   </Box>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      Contact Information
+                      {t('classification.contactInfo')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      How we can reach you after resolving your request
+                      {t('classification.contactInfoDesc')}
                     </Typography>
                   </Box>
                   {(contactName || contactPhone || contactEmail) && (
                     <Chip
-                      label="Filled"
+                      label={t('common.success')}
                       color="success"
                       size="small"
                       icon={<CheckCircleIcon />}
@@ -457,11 +619,10 @@ export default function ClassificationPage() {
                   }}
                 >
                   <Box>
-                    <Stack spacing={2}>
+                    <Stack spacing={2} sx={{ maxWidth: 500 }}>
                     <TextField
-                      fullWidth
-                      label="Full Name"
-                      placeholder="John Doe"
+                      label={t('classification.name')}
+                      placeholder={t('classification.namePlaceholder')}
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
                       InputProps={{
@@ -478,9 +639,8 @@ export default function ClassificationPage() {
                       }}
                     />
                     <TextField
-                      fullWidth
-                      label="Phone Number"
-                      placeholder="+380 12 345 6789"
+                      label={t('classification.phone')}
+                      placeholder={t('classification.phonePlaceholder')}
                       value={contactPhone}
                       onChange={(e) => setContactPhone(e.target.value)}
                       type="tel"
@@ -498,9 +658,8 @@ export default function ClassificationPage() {
                       }}
                     />
                     <TextField
-                      fullWidth
-                      label="Email Address"
-                      placeholder="john.doe@example.com"
+                      label={t('classification.email')}
+                      placeholder={t('classification.emailPlaceholder')}
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
                       type="email"
@@ -589,10 +748,10 @@ export default function ClassificationPage() {
                   </Box>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      Priority Level
+                      {t('classification.priority')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      How urgent is this request?
+                      {t('classification.priorityDesc')}
                     </Typography>
                   </Box>
                   {priority && (
@@ -626,13 +785,13 @@ export default function ClassificationPage() {
                     aria-label="priority level"
                     fullWidth
                     sx={{
-                      flexWrap: 'wrap',
+                      display: 'flex',
                       gap: 1.5,
                       '& .MuiToggleButton-root': {
-                        flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 auto' },
-                        minWidth: { xs: '100%', sm: 'auto' },
-                        py: 2,
-                        px: 3,
+                        flex: '1 1 0%',
+                        minWidth: 0,
+                        py: 1.5,
+                        px: 2,
                         border: '2px solid',
                         borderColor: 'divider',
                         borderRadius: 2,
@@ -742,15 +901,15 @@ export default function ClassificationPage() {
                   </Box>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      Image Upload (Optional)
+                      {t('classification.imageUpload')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Add a photo to help us understand the issue better
+                      {t('classification.imageUploadDesc')}
                     </Typography>
                   </Box>
-                  {(selectedFile || imageUrl) && (
+                  {(selectedFiles.length > 0 || imageUrl) && (
                     <Chip
-                      label="Added"
+                      label={selectedFiles.length > 0 ? `${selectedFiles.length} ${selectedFiles.length > 1 ? t('classification.images') : t('classification.image')}` : t('classification.added')}
                       color="success"
                       size="small"
                       icon={<CheckCircleIcon />}
@@ -774,15 +933,16 @@ export default function ClassificationPage() {
                 >
                   <Box>
                     <Stack spacing={3}>
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                       <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <CloudUploadIcon color="primary" />
-                        Upload from PC
+                        {t('classification.uploadFromPC')}
                       </Typography>
                       <input
                         ref={fileInputRef}
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleFileSelect}
                         style={{ display: 'none' }}
                         id="image-upload-input"
@@ -806,68 +966,130 @@ export default function ClassificationPage() {
                             },
                           }}
                         >
-                          Choose File
+                          {t('classification.chooseFiles')}
                         </Button>
                       </label>
-                      {selectedFile && (
+                      {selectedFiles.length > 0 && (
                         <Fade in>
-                          <Box sx={{ mt: 2 }}>
-                            <Chip
-                              label={selectedFile.name}
-                              onDelete={handleRemoveFile}
-                              color="primary"
-                              variant="outlined"
-                              sx={{ mb: 2 }}
-                            />
-                            {imagePreview && (
-                              <Zoom in>
-                                <Box
-                                  sx={{
-                                    mt: 2,
-                                    borderRadius: 3,
-                                    overflow: 'hidden',
-                                    border: '3px solid',
-                                    borderColor: 'primary.main',
-                                    display: 'inline-block',
-                                    boxShadow: '0 8px 24px rgba(99, 102, 241, 0.3)',
-                                  }}
-                                >
-                                  <img
-                                    src={imagePreview}
-                                    alt="Preview"
-                                    style={{
-                                      maxWidth: '100%',
-                                      maxHeight: '300px',
-                                      display: 'block',
+                          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                            <Box
+                              sx={{
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                  xs: 'repeat(1, 1fr)',
+                                  sm: 'repeat(2, 1fr)',
+                                  md: 'repeat(3, 1fr)',
+                                  lg: 'repeat(4, 1fr)',
+                                },
+                                gap: 2,
+                                mt: 2,
+                                width: '100%',
+                              }}
+                            >
+                              {imagePreviews.map((preview, index) => (
+                                <Zoom in key={index} style={{ transitionDelay: `${index * 50}ms` }}>
+                                  <Box
+                                    sx={{
+                                      position: 'relative',
+                                      borderRadius: 2,
+                                      overflow: 'hidden',
+                                      border: '2px solid',
+                                      borderColor: 'primary.main',
+                                      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
+                                      transition: 'all 0.3s',
+                                      '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 8px 24px rgba(99, 102, 241, 0.4)',
+                                      },
                                     }}
-                                  />
-                                </Box>
-                              </Zoom>
-                            )}
+                                  >
+                                    <img
+                                      src={preview}
+                                      alt={`Preview ${index + 1}`}
+                                      style={{
+                                        width: '100%',
+                                        height: '200px',
+                                        display: 'block',
+                                        objectFit: 'cover',
+                                      }}
+                                    />
+                                    <Box
+                                      sx={{
+                                        position: 'absolute',
+                                        top: 8,
+                                        right: 8,
+                                        bgcolor: 'rgba(0, 0, 0, 0.6)',
+                                        borderRadius: '50%',
+                                        width: 32,
+                                        height: 32,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                          bgcolor: 'rgba(211, 47, 47, 0.8)',
+                                          transform: 'scale(1.1)',
+                                        },
+                                      }}
+                                      onClick={() => handleRemoveFile(index)}
+                                    >
+                                      <Typography
+                                        sx={{
+                                          color: 'white',
+                                          fontSize: '1.2rem',
+                                          fontWeight: 'bold',
+                                          lineHeight: 1,
+                                        }}
+                                      >
+                                        ×
+                                      </Typography>
+                                    </Box>
+                                    <Box
+                                      sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bgcolor: 'rgba(0, 0, 0, 0.6)',
+                                        color: 'white',
+                                        p: 0.5,
+                                        fontSize: '0.75rem',
+                                        textOverflow: 'ellipsis',
+                                        overflow: 'hidden',
+                                        whiteSpace: 'nowrap',
+                                      }}
+                                    >
+                                      {selectedFiles[index]?.name}
+                                    </Box>
+                                  </Box>
+                                </Zoom>
+                              ))}
+                            </Box>
                           </Box>
                         </Fade>
                       )}
                     </Box>
 
                     <Divider>
-                      <Chip label="OR" size="small" />
+                      <Chip label={t('common.or')} size="small" />
                     </Divider>
 
                     <Box>
                       <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ImageIcon color="primary" />
-                        Use Image URL
+                        {t('classification.useImageUrl')}
                       </Typography>
                       <TextField
                         fullWidth
-                        label="Image URL"
-                        placeholder="https://example.com/image.jpg"
+                        label={t('classification.useImageUrl')}
+                        placeholder={t('classification.imageUrlPlaceholder')}
                         value={imageUrl || ''}
                         onChange={(e) => {
                           setImageUrl(e.target.value || null)
                           if (e.target.value) {
-                            setSelectedFile(null)
-                            setImagePreview(null)
+                            setSelectedFiles([])
+                            setImagePreviews([])
                             if (fileInputRef.current) {
                               fileInputRef.current.value = ''
                             }

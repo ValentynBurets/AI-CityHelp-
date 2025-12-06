@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Paper,
@@ -38,6 +39,7 @@ interface DiagnosticLog {
 }
 
 export default function DiagnosticsPage() {
+  const { t } = useTranslation()
   const [logs, setLogs] = useState<DiagnosticLog[]>([])
 
   useEffect(() => {
@@ -85,10 +87,10 @@ export default function DiagnosticsPage() {
             sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}
           >
             <BugReportIcon sx={{ fontSize: '2rem' }} />
-            Diagnostics
+            {t('diagnostics.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Monitor API requests and responses in real-time
+            {t('diagnostics.title')}
           </Typography>
         </Box>
       </Fade>
@@ -145,10 +147,10 @@ export default function DiagnosticsPage() {
           >
             <InfoIcon sx={{ fontSize: '4rem', color: 'text.secondary', mb: 2 }} />
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No diagnostic logs yet
+              {t('diagnostics.noLogs')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Make some API requests to see logs here
+              {t('diagnostics.noLogs')}
             </Typography>
           </Card>
         </Grow>
@@ -173,14 +175,14 @@ export default function DiagnosticsPage() {
                 <TableRow>
                   <TableCell sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white' }}>
                     <ScheduleIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-                    Timestamp
+                    {t('diagnostics.timestamp')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white' }}>
                     <HttpIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-                    Method
+                    {t('diagnostics.method')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white' }}>
-                    Endpoint
+                    {t('diagnostics.endpoint')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white' }}>
                     Status
@@ -219,7 +221,7 @@ export default function DiagnosticsPage() {
                       <TableCell>
                         {log.error ? (
                           <Chip
-                            label="Error"
+                            label={t('diagnostics.error')}
                             color="error"
                             size="small"
                             icon={<ErrorIcon />}

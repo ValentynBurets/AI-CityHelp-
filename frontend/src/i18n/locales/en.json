@@ -1,0 +1,81 @@
+{
+  "app": {
+    "title": "AI CityHelp",
+    "classification": "Classification",
+    "knowledgeBase": "Knowledge Base",
+    "diagnostics": "Diagnostics"
+  },
+  "classification": {
+    "title": "Classify Citizen Request",
+    "subtitle": "Fill out the form below or chat with our AI assistant to prepare your request",
+    "requestDetails": "Request Details",
+    "requestDetailsDesc": "Describe the issue or request in detail",
+    "requestTextPlaceholder": "Enter your request details here...",
+    "contactInfo": "Contact Information",
+    "contactInfoDesc": "How can we reach you after handling your request?",
+    "name": "Name",
+    "namePlaceholder": "Your full name",
+    "phone": "Phone",
+    "phonePlaceholder": "+380 XX XXX XX XX",
+    "email": "Email",
+    "emailPlaceholder": "your.email@example.com",
+    "priority": "Priority Level",
+    "priorityDesc": "Select the urgency level of your request",
+    "imageUpload": "Image Upload (Optional)",
+    "imageUploadDesc": "Add a photo to help us understand the issue better",
+    "uploadFromPC": "Upload from PC",
+    "chooseFiles": "Choose Files",
+    "useImageUrl": "Use Image URL",
+    "imageUrlPlaceholder": "https://example.com/image.jpg",
+    "submit": "Submit Request",
+    "submitting": "Submitting...",
+    "urgent": "Urgent",
+    "important": "Important",
+    "notImportant": "Not Important",
+    "needAdvice": "Need Advice",
+    "cannotHandle": "Can't Handle",
+    "added": "Added",
+    "images": "images",
+    "image": "image"
+  },
+  "knowledgeBase": {
+    "title": "Knowledge Base",
+    "reload": "Reload Knowledge Base",
+    "reloading": "Reloading...",
+    "categories": "Categories",
+    "noCategories": "No categories available",
+    "errorLoading": "Error loading knowledge base",
+    "success": "Knowledge base reloaded successfully",
+    "itemsLoaded": "items loaded"
+  },
+  "diagnostics": {
+    "title": "API Diagnostics",
+    "noLogs": "No API requests yet",
+    "endpoint": "Endpoint",
+    "method": "Method",
+    "timestamp": "Timestamp",
+    "request": "Request",
+    "response": "Response",
+    "error": "Error"
+  },
+  "chat": {
+    "title": "AI Assistant",
+    "placeholder": "Type your message here...",
+    "send": "Send",
+    "sending": "Sending...",
+    "close": "Close",
+    "suggestion": {
+      "title": "Need help filling out the form?",
+      "message": "You've been working on this form for a while. Our AI assistant can help you complete it faster!",
+      "tryAssistant": "Try AI Assistant"
+    }
+  },
+  "common": {
+    "or": "OR",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close"
+  }
+}
+

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Paper,
@@ -36,6 +37,7 @@ interface ChatAgentProps {
 }
 
 export default function ChatAgent({ onFormDataExtracted, onClose }: ChatAgentProps) {
+  const { t } = useTranslation()
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -156,7 +158,7 @@ export default function ChatAgent({ onFormDataExtracted, onClose }: ChatAgentPro
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <SmartToyIcon />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              AI Assistant
+              {t('chat.title')}
             </Typography>
           </Box>
           <IconButton size="small" onClick={onClose} sx={{ color: 'white' }}>
@@ -262,7 +264,7 @@ export default function ChatAgent({ onFormDataExtracted, onClose }: ChatAgentPro
             <TextField
               fullWidth
               size="small"
-              placeholder="Type your message..."
+              placeholder={t('chat.placeholder')}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}

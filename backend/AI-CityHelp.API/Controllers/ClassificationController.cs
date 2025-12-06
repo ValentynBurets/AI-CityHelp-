@@ -29,7 +29,7 @@ public class ClassificationController : ControllerBase
             string? contactPhone = null;
             string? contactEmail = null;
             string? priority = null;
-            IFormFile? imageFile = null;
+            List<IFormFile> imageFiles = new List<IFormFile>();
 
             // Check content type and read accordingly
             if (Request.ContentType?.Contains("multipart/form-data") == true)
@@ -46,7 +46,12 @@ public class ClassificationController : ControllerBase
                 contactEmail = form["contactEmail"].FirstOrDefault();
                 priority = form["priority"].FirstOrDefault();
                 
-                imageFile = form.Files.GetFile("imageFile");
+                // Get all image files (supporting multiple uploads)
+                var allFiles = form.Files.ToList();
+                imageFiles = allFiles
+                    .Where(f => f.Name.StartsWith("imageFile"))
+                    .OrderBy(f => f.Name)
+                    .ToList();
             }
             else
             {
@@ -68,32 +73,46 @@ public class ClassificationController : ControllerBase
                 return BadRequest(new { error = "RequestText is required" });
             }
 
-            // Handle file upload
+            // Handle file uploads (multiple images)
             string? finalImageUrl = imageUrl;
-            if (imageFile != null && imageFile.Length > 0)
+            if (imageFiles.Count > 0)
             {
-                // Save uploaded file temporarily and convert to base64 data URL
-                var fileName = Path.GetFileName(imageFile.FileName);
-                var tempPath = Path.Combine(Path.GetTempPath(), $"cityhelp_{Guid.NewGuid()}_{fileName}");
+                _logger.LogInformation("Processing {Count} image file(s)", imageFiles.Count);
                 
-                using (var stream = new FileStream(tempPath, FileMode.Create))
+                // For now, use the first image (RAG engine accepts single image)
+                // In the future, we could combine multiple images or process them separately
+                var firstImage = imageFiles[0];
+                if (firstImage.Length > 0)
                 {
-                    await imageFile.CopyToAsync(stream);
+                    // Save uploaded file temporarily and convert to base64 data URL
+                    var fileName = Path.GetFileName(firstImage.FileName);
+                    var tempPath = Path.Combine(Path.GetTempPath(), $"cityhelp_{Guid.NewGuid()}_{fileName}");
+                    
+                    using (var stream = new FileStream(tempPath, FileMode.Create))
+                    {
+                        await firstImage.CopyToAsync(stream);
+                    }
+                    
+                    _logger.LogInformation("Image file uploaded: {FileName}, Size: {Size} bytes", fileName, firstImage.Length);
+                    
+                    // Convert to base64 data URL for processing
+                    var imageBytes = await System.IO.File.ReadAllBytesAsync(tempPath);
+                    var base64Image = Convert.ToBase64String(imageBytes);
+                    finalImageUrl = $"data:{firstImage.ContentType};base64,{base64Image}";
+                    
+                    // Clean up temp file
+                    try
+                    {
+                        System.IO.File.Delete(tempPath);
+                    }
+                    catch { }
                 }
                 
-                _logger.LogInformation("Image file uploaded: {FileName}, Size: {Size} bytes", fileName, imageFile.Length);
-                
-                // Convert to base64 data URL for processing
-                var imageBytes = await System.IO.File.ReadAllBytesAsync(tempPath);
-                var base64Image = Convert.ToBase64String(imageBytes);
-                finalImageUrl = $"data:{imageFile.ContentType};base64,{base64Image}";
-                
-                // Clean up temp file
-                try
+                // Log all uploaded files
+                if (imageFiles.Count > 1)
                 {
-                    System.IO.File.Delete(tempPath);
+                    _logger.LogInformation("Additional {Count} image file(s) uploaded but using first image for classification", imageFiles.Count - 1);
                 }
-                catch { }
             }
 
             // Log contact information and priority if provided
@@ -106,10 +125,15 @@ public class ClassificationController : ControllerBase
             var response = await _ragEngine.ClassifyAsync(requestText, finalImageUrl);
             return Ok(response);
         }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Error in classify endpoint: {Message}", ex.Message);
+            return StatusCode(500, new { error = ex.Message });
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in classify endpoint");
-            return StatusCode(500, new { error = ex.Message });
+            _logger.LogError(ex, "Unexpected error in classify endpoint: {Message}", ex.Message);
+            return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
         }
     }
 

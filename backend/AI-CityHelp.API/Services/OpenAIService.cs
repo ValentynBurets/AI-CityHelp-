@@ -31,23 +31,44 @@ public class OpenAIService : IOpenAIService
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                _logger.LogWarning("Attempted to generate embedding for empty text");
+                throw new ArgumentException("Text cannot be empty", nameof(text));
+            }
+
+            _logger.LogInformation("Generating embedding for text (length: {Length})", text.Length);
+            
             var embeddingResult = await _openAIService.Embeddings.CreateEmbedding(new EmbeddingCreateRequest
             {
                 InputAsList = new List<string> { text },
                 Model = _embeddingModel
             });
             
-            if (embeddingResult.Successful && embeddingResult.Data.Any())
+            if (embeddingResult.Successful && embeddingResult.Data != null && embeddingResult.Data.Any())
             {
-                return embeddingResult.Data[0].Embedding.Select(e => (float)e).ToArray();
+                var embedding = embeddingResult.Data[0].Embedding.Select(e => (float)e).ToArray();
+                _logger.LogInformation("Successfully generated embedding with {Count} dimensions", embedding.Length);
+                return embedding;
             }
             
-            throw new InvalidOperationException("Failed to generate embedding");
+            // Log detailed error information
+            var errorMessage = embeddingResult.Error?.Message ?? "Unknown error";
+            var errorCode = embeddingResult.Error?.Code ?? "Unknown";
+            _logger.LogError("Failed to generate embedding. Error: {Error}, Code: {Code}, Successful: {Successful}, HasData: {HasData}",
+                errorMessage, errorCode, embeddingResult.Successful, embeddingResult.Data != null && embeddingResult.Data.Any());
+            
+            throw new InvalidOperationException($"Failed to generate embedding: {errorMessage} (Code: {errorCode})");
+        }
+        catch (InvalidOperationException)
+        {
+            throw; // Re-throw our custom exceptions
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating embedding for text: {Text}", text);
-            throw;
+            _logger.LogError(ex, "Error generating embedding for text (length: {Length}): {Message}", 
+                text?.Length ?? 0, ex.Message);
+            throw new InvalidOperationException($"Failed to generate embedding: {ex.Message}", ex);
         }
     }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Button,
@@ -29,6 +30,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { knowledgeBaseApi } from '../services/api'
 
 export default function KnowledgeBasePage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [loadStatus, setLoadStatus] = useState<string | null>(null)
 
@@ -40,7 +42,7 @@ export default function KnowledgeBasePage() {
   const loadMutation = useMutation({
     mutationFn: () => knowledgeBaseApi.load(),
     onSuccess: (data) => {
-      setLoadStatus(`Successfully loaded ${data.itemsLoaded} categories`)
+      setLoadStatus(`${t('knowledgeBase.success')} ${data.itemsLoaded} ${t('knowledgeBase.itemsLoaded')}`)
       queryClient.invalidateQueries({ queryKey: ['knowledgeBase'] })
       setTimeout(() => setLoadStatus(null), 5000)
     },
@@ -61,10 +63,10 @@ export default function KnowledgeBasePage() {
             sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}
           >
             <LibraryBooksIcon sx={{ fontSize: '2rem' }} />
-            Knowledge Base
+            {t('knowledgeBase.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Browse and manage municipal service categories
+            {t('knowledgeBase.categories')}
           </Typography>
         </Box>
       </Fade>
@@ -82,7 +84,7 @@ export default function KnowledgeBasePage() {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <CategoryIcon color="primary" sx={{ fontSize: '2rem' }} />
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Categories
+                {t('knowledgeBase.categories')}
               </Typography>
             </Box>
             <Button
@@ -97,7 +99,7 @@ export default function KnowledgeBasePage() {
                 },
               }}
             >
-              {loadMutation.isPending ? 'Loading...' : 'Reload KB'}
+              {loadMutation.isPending ? t('common.loading') : t('knowledgeBase.reload')}
             </Button>
           </Box>
         </Card>
@@ -124,7 +126,7 @@ export default function KnowledgeBasePage() {
       {error && (
         <Fade in>
           <Alert severity="error" icon={<InfoIcon />}>
-            Error loading knowledge base: {error instanceof Error ? error.message : 'Unknown error'}
+            {t('knowledgeBase.errorLoading')}: {error instanceof Error ? error.message : t('common.error')}
           </Alert>
         </Fade>
       )}
@@ -132,7 +134,7 @@ export default function KnowledgeBasePage() {
       {categories && categories.length === 0 && (
         <Fade in>
           <Alert severity="warning" icon={<InfoIcon />}>
-            No categories found. Please load the knowledge base first.
+            {t('knowledgeBase.noCategories')}
           </Alert>
         </Fade>
       )}
@@ -143,7 +145,7 @@ export default function KnowledgeBasePage() {
             <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white', borderRadius: '12px 12px 0 0' }}>
               <Typography variant="h6" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CategoryIcon />
-                {categories.length} Categories Available
+                {categories.length} {t('knowledgeBase.categories')}
               </Typography>
             </Box>
             <List sx={{ p: 0 }}>
